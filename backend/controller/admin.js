@@ -6,18 +6,20 @@ class AdminsController {
   async getAdmins(req, res) {
     try {
       let { limit = 10, page = 1 } = req.params;
-      const adminsLength = (await Admins.find()).length;
+      const adminsLength = await Admins.countDocuments();
       const admins = await Admins.find()
         .limit(limit * 1)
         .skip((page - 1) * limit);
+
       if (!admins) {
-        res.status(400).json({
+        return res.status(400).json({
           msg: "Admins not found",
           variant: "Error",
           payload: null,
           totalCount: 0,
         });
       }
+
       res.status(200).json({
         msg: "Admins found",
         variant: "Success",
@@ -36,6 +38,14 @@ class AdminsController {
   async getProfile(req, res) {
     try {
       let admin = await Admins.findById(req.admin._id);
+      if (!admin.isActive) {
+        return res.status(401).json({
+          msg: "Invalid token",
+          variant: "Error",
+          payload: null,
+          totalCount: 0,
+        });
+      }
       res.status(200).json({
         msg: "Your profile found successfully",
         variant: "success",
@@ -150,9 +160,15 @@ class AdminsController {
   }
   async updateAdmin(req, res) {
     try {
-      const { username } = req.admin;
+      if (req.body.password) {
+        return res.status(400).json({
+          msg: "Password must be unavailable",
+          variant: "error",
+          payload: null,
+        });
+      }
       const { id } = req.params;
-
+      const { username } = req.admin;
       const trimmedId = id.trim();
 
       const existingAdmin = await Admins.findOne({ username });
@@ -164,23 +180,12 @@ class AdminsController {
         });
       }
 
-      let admin = await Admins.findById(trimmedId);
-      if (!admin) {
-        return res.status(404).json({
-          msg: "Admin not found",
-          variant: "error",
-          payload: null,
-        });
-      }
-
-      req.body.password = admin.password;
-
-      admin = await Admins.findByIdAndUpdate(trimmedId, req.body, {
+      let admin = await Admins.findByIdAndUpdate(trimmedId, req.body, {
         new: true,
       });
 
       res.status(200).json({
-        msg: "Profile updated successfully",
+        msg: "Admin updated successfully",
         variant: "success",
         payload: admin,
       });
@@ -220,9 +225,13 @@ class AdminsController {
         password: hashedPassword,
       });
 
-      const token = jwt.sign({ _id: admin._id }, process.env.SECRET_KEY, {
-        expiresIn: "7d",
-      });
+      const token = jwt.sign(
+        { _id: admin._id, role: admin.role, isActive: true },
+        process.env.SECRET_KEY,
+        {
+          expiresIn: "7d",
+        }
+      );
 
       res.status(201).json({
         msg: "Admin created successfully",
@@ -231,7 +240,7 @@ class AdminsController {
       });
     } catch (error) {
       res.status(500).json({
-        msg: "Server error",
+        msg: error,
         variant: "error",
         payload: null,
       });
@@ -241,6 +250,14 @@ class AdminsController {
   async loginAdmin(req, res) {
     try {
       let admin = await Admins.findOne({ username: req.body.username });
+      if (!admin || !admin.isActive) {
+        return res.status(401).json({
+          msg: "Invalid token",
+          variant: "Error",
+          payload: null,
+          totalCount: 0,
+        });
+      }
       if (!admin) {
         return res.status(400).json({
           msg: "Invalid username or password",
@@ -261,9 +278,13 @@ class AdminsController {
         });
       }
 
-      const token = jwt.sign({ _id: admin._id }, process.env.SECRET_KEY, {
-        expiresIn: "7d",
-      });
+      const token = jwt.sign(
+        { _id: admin._id, role: admin.role, isActive: admin.isActive },
+        process.env.SECRET_KEY,
+        {
+          expiresIn: "7d",
+        }
+      );
 
       res.status(200).json({
         msg: "Admin logged in successfully",

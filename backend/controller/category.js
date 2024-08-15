@@ -23,6 +23,31 @@ class CategoriesController {
       });
     }
   }
+  async getCategoryById(req, res) {
+    try {
+      let category = await Category.findById(req.params.id);
+
+      if (!category) {
+        return res.status(400).json({
+          variant: "error",
+          msg: "Category not found",
+          payload: null,
+        });
+      }
+
+      res.status(200).json({
+        variant: "success",
+        msg: "Category found",
+        payload: category,
+      });
+    } catch (error) {
+      res.status(500).json({
+        variant: "error",
+        msg: "Server error",
+        payload: null,
+      });
+    }
+  }
 
   async createCategory(req, res) {
     try {

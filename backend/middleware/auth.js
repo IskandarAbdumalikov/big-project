@@ -11,9 +11,25 @@ export const auth = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.SECRET_KEY);
-    req.admin = decoded;
-    next();
+    jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({
+          msg: "Invalid token.",
+          variant: "error",
+          payload: null,
+        });
+      }
+      if (decoded.isActive) {
+        req.admin = decoded;
+        next();
+      } else {
+        return res.status(401).json({
+          msg: "Invalid token.",
+          variant: "error",
+          payload: null,
+        });
+      }
+    });
   } catch (err) {
     res.status(401).json({
       msg: "Invalid token.",
@@ -22,6 +38,7 @@ export const auth = (req, res, next) => {
     });
   }
 };
+
 export const ownerMiddleware = (req, res, next) => {
   if (req.admin.role !== "owner") {
     return res.status(403).json({

@@ -1,17 +1,28 @@
 import { Product, validateProduct } from "../models/productScheme.js";
+import { Category } from "../models/categoryScheme.js";
 
 class ProductsController {
   async getProducts(req, res) {
     try {
-      const { limit = 10, skip = 0 } = req.query;
-      const products = await Product.find()
+      const {
+        limit = 10,
+        skip = 0,
+        sortBy = "price",
+        sortOrder = "asc",
+      } = req.query;
+      const query = {};
+
+      const products = await Product.find(query)
+        .populate([{ path: "categoryId", select: "title" }])
+        .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
         .limit(parseInt(limit))
         .skip(parseInt(skip));
-      const totalCount = await Product.countDocuments();
+
+      const totalCount = await Product.countDocuments(query);
 
       res.status(200).json({
         variant: "success",
-        msg: "All products",
+        msg: "Products fetched successfully",
         payload: products,
         totalCount,
       });
@@ -26,16 +37,29 @@ class ProductsController {
 
   async getProductsByCategory(req, res) {
     try {
-      const { limit = 10, count = 0 } = req.query;
-      const { id } = req.params;
-      const products = await Product.find({ categoryId: id })
+      const { limit = 10, skip = 0 } = req.query;
+      const { category } = req.params;
+      
+
+      const categoryData = await Category.findOne({ title: category });
+      if (!categoryData) {
+        return res.status(404).json({
+          variant: "error",
+          msg: "Category not found",
+          payload: null,
+        });
+      }
+
+      const products = await Product.find({ categoryId: categoryData._id })
         .limit(parseInt(limit))
-        .skip(parseInt(count));
-      const totalCount = await Product.countDocuments({ categoryId: id });
+        .skip(parseInt(skip));
+      const totalCount = await Product.countDocuments({
+        categoryId: categoryData._id,
+      });
 
       res.status(200).json({
         variant: "success",
-        msg: "All products by category",
+        msg: `All products for category ${category}`,
         payload: products,
         totalCount,
       });
@@ -74,37 +98,18 @@ class ProductsController {
     }
   }
 
-  async createProduct(req, res) {
-    try {
-      const { error } = validateProduct(req.body);
-      if (error) return res.status(400).json({ msg: error.details[0].message });
-      const { adminId } = req.admin;
-
-      const product = await Product.create({
-        ...req.body,
-        adminId,
-      });
-
-      res.status(201).json({
-        variant: "success",
-        msg: "Product created successfully",
-        payload: product,
-      });
-    } catch (error) {
-      res.status(500).json({
-        variant: "error",
-        msg: "Server error",
-        payload: null,
-      });
-    }
-  }
-
   async updateProduct(req, res) {
     try {
       const { error } = validateProduct(req.body);
-      if (error) return res.status(400).json({ msg: error.details[0].message });
-      const { id } = req.params;
+      if (error) {
+        return res.status(400).json({
+          variant: "error",
+          msg: error.details[0].message,
+          payload: null,
+        });
+      }
 
+      const { id } = req.params;
       const product = await Product.findByIdAndUpdate(id, req.body, {
         new: true,
       });
@@ -134,7 +139,6 @@ class ProductsController {
   async deleteProduct(req, res) {
     try {
       const { id } = req.params;
-
       const product = await Product.findByIdAndDelete(id);
 
       if (!product) {
@@ -151,6 +155,50 @@ class ProductsController {
         payload: product,
       });
     } catch (error) {
+      res.status(500).json({
+        variant: "error",
+        msg: "Server error",
+        payload: null,
+      });
+    }
+  }
+
+  async createProduct(req, res) {
+    try {
+      const { error } = validateProduct(req.body);
+      if (error) {
+        return res.status(400).json({
+          variant: "error",
+          msg: error.details[0].message,
+          payload: null,
+        });
+      }
+
+      let fileUrls = [];
+      if (req.files && req.files.length > 0) {
+        fileUrls = req.files.map(
+          (file) =>
+            `${req.protocol}://${req.get("host")}/uploads/${file.filename}`
+        );
+      } else {
+        fileUrls = req.body.urls;
+      }
+
+      const newProduct = {
+        ...req.body,
+        urls: fileUrls,
+        adminId: req.admin ? req.admin._id : req.body.adminId,
+      };
+
+      const product = await Product.create(newProduct);
+
+      res.status(201).json({
+        variant: "success",
+        msg: "Product created successfully",
+        payload: product,
+      });
+    } catch (error) {
+      console.log(error);
       res.status(500).json({
         variant: "error",
         msg: "Server error",

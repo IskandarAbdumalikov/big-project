@@ -1,5 +1,4 @@
 import { Schema, model } from "mongoose";
-
 import Joi from "joi";
 
 const productSchema = new Schema(
@@ -69,17 +68,17 @@ export const validateProduct = (body) => {
   const schema = Joi.object({
     title: Joi.string().required(),
     price: Joi.number().required(),
-    oldPrice: Joi.number().allow(0),
-    stock: Joi.number().allow(0),
-    rating: Joi.number().allow(0),
-    views: Joi.number().allow(0),
-    categoryId: Joi.string().required(),
-    adminId: Joi.string().required(),
+    oldPrice: Joi.number().default(0),
+    stock: Joi.number().default(0),
+    rating: Joi.number().default(0),
+    views: Joi.number().default(0),
+    categoryId: Joi.string().length(24).required(),
+    adminId: Joi.string().length(24).required(),
     units: Joi.string().valid("kg", "m", "litr").required(),
     description: Joi.string().required(),
     urls: Joi.array().items(Joi.string()).required(),
-    info: Joi.array().items(Joi.string()).allow([]),
-    available: Joi.boolean().allow(true),
+    info: Joi.array().items(Joi.string()).default([]),
+    available: Joi.boolean().default(true),
   });
 
   return schema.validate(body);
