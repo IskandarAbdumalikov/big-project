@@ -54,6 +54,15 @@ class CategoriesController {
       const { error } = validateCategory(req.body);
       if (error) return res.status(400).json({ msg: error.details[0].message });
 
+      let existingTitle = await Category.findOne({ title: req.body.title });
+      if (existingTitle) {
+        return res.status(400).json({
+          variant: "error",
+          msg: "This title already exists",
+          payload: null,
+        });
+      }
+
       const category = await Category.create({
         ...req.body,
         adminId: req.admin._id,
@@ -82,6 +91,20 @@ class CategoriesController {
     try {
       const { error } = validateCategory(req.body);
       if (error) return res.status(400).json({ msg: error.details[0].message });
+
+      let existingCategory = await Category.findOne({ title: req.body.title });
+      console.log(existingCategory);
+
+      if (
+        existingCategory &&
+        existingCategory._id.toString() !== req.params.id.toString()
+      ) {
+        return res.status(400).json({
+          msg: "This title already exists",
+          variant: "error",
+          payload: null,
+        });
+      }
 
       const category = await Category.findByIdAndUpdate(
         req.params.id,

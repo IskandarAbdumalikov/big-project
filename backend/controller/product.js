@@ -9,18 +9,22 @@ class ProductsController {
         skip = 1,
         sortBy = "price",
         sortOrder = "asc",
+        category,
       } = req.query;
-      const query = {};
 
-      const products = await Product.find(query)
+      const products = await Product.find({
+        ...(category && { categoryId: category }),
+      })
         .populate([
           { path: "categoryId", select: "title" },
-          { path: "adminId", select: ["fname",'username'] },
+          { path: "adminId", select: ["fname", "username"] },
         ])
         .limit(parseInt(limit))
         .skip(parseInt(skip - 1) * parseInt(limit))
         .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1, createdAt: -1 });
-      const totalCount = await Product.countDocuments(query);
+      const totalCount = await Product.countDocuments({
+        ...(category && { categoryId: category }),
+      });
 
       res.status(200).json({
         variant: "success",
@@ -103,6 +107,19 @@ class ProductsController {
   async updateProduct(req, res) {
     try {
       const { error } = validateProduct(req.body);
+      let existProduct = await Product.findOne({ title: req.body.title });
+      console.log(existProduct);
+
+      if (
+        existProduct &&
+        existProduct._id.toString() !== req.params.id.toString()
+      ) {
+        return res.status(400).json({
+          msg: "This title already exists",
+          variant: "error",
+          payload: null,
+        });
+      }
 
       if (error) {
         return res.status(400).json({
@@ -196,7 +213,10 @@ class ProductsController {
         adminId: req.admin ? req.admin._id : req.body.adminId,
       };
 
-      const product = await Product.create(newProduct);
+      const product = await Product.create({
+        ...newProduct,
+        info: JSON.parse(req.body.info),
+      });
       res.status(201).json({
         variant: "success",
         msg: "Product created successfully",
