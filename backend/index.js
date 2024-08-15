@@ -18,7 +18,7 @@ monngose
 app.use("/", Routes);
 
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static("./uploads"));
+app.use("/images", express.static("./files"));
 
 const PORT = process.env.PORT || 8000;
 

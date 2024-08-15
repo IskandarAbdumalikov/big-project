@@ -47,11 +47,11 @@ const productSchema = new Schema(
       required: true,
     },
     urls: {
-      type: [String],
+      type: Array,
       required: true,
     },
     info: {
-      type: [String],
+      type: Array,
       default: [],
     },
     available: {
@@ -76,8 +76,8 @@ export const validateProduct = (body) => {
     adminId: Joi.string().length(24).required(),
     units: Joi.string().valid("kg", "m", "litr").required(),
     description: Joi.string().required(),
-    urls: Joi.array().items(Joi.string()).required(),
-    info: Joi.array().items(Joi.string()).default([]),
+    urls: Joi.array(),
+    info: Joi.array().default([]),
     available: Joi.boolean().default(true),
   });
 

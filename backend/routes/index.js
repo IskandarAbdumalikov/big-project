@@ -3,6 +3,7 @@ import AdminsController from "../controller/admin.js";
 import ProductsController from "../controller/product.js";
 import CategoriesController from "../controller/category.js";
 import { auth, ownerMiddleware } from "../middleware/auth.js";
+import { uploader } from "../middleware/uploader.js";
 
 const router = express.Router();
 
@@ -31,10 +32,17 @@ router.post("/admin/sign-in", AdminsController.loginAdmin);
 //products
 router.get("/product", ProductsController.getProducts);
 router.get("/product/:id", ProductsController.getProduct);
-router.post("/product", [auth], ProductsController.createProduct);
 router.patch("/product/:id", [auth], ProductsController.updateProduct);
 router.delete("/product/:id", [auth], ProductsController.deleteProduct);
-router.get("/product/category/:categoryId",ProductsController.getProductsByCategory);
+router.get(
+  "/product/category/:categoryId",
+  ProductsController.getProductsByCategory
+);
+router.post(
+  "/product",
+  [auth, uploader.array("photos")],
+  ProductsController.createProduct
+);
 
 //category
 router.get("/category", CategoriesController.getCategories);

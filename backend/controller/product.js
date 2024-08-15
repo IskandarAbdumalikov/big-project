@@ -6,7 +6,7 @@ class ProductsController {
     try {
       const {
         limit = 10,
-        skip = 0,
+        skip = 1,
         sortBy = "price",
         sortOrder = "asc",
       } = req.query;
@@ -16,7 +16,7 @@ class ProductsController {
         .populate([{ path: "categoryId", select: "title" }])
         .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
         .limit(parseInt(limit))
-        .skip(parseInt(skip));
+        .skip(parseInt(skip-1)*parseInt(limit));
 
       const totalCount = await Product.countDocuments(query);
 
@@ -101,6 +101,7 @@ class ProductsController {
   async updateProduct(req, res) {
     try {
       const { error } = validateProduct(req.body);
+
       if (error) {
         return res.status(400).json({
           variant: "error",
@@ -174,15 +175,9 @@ class ProductsController {
         });
       }
 
-      let fileUrls = [];
-      if (req.files && req.files.length > 0) {
-        fileUrls = req.files.map(
-          (file) =>
-            `${req.protocol}://${req.get("host")}/uploads/${file.filename}`
-        );
-      } else {
-        fileUrls = req.body.urls;
-      }
+      let fileUrls = req.files.map(
+        (file) => `${req.protocol}://${req.get("host")}/images/${file.filename}`
+      );
 
       const newProduct = {
         ...req.body,
@@ -191,7 +186,6 @@ class ProductsController {
       };
 
       const product = await Product.create(newProduct);
-
       res.status(201).json({
         variant: "success",
         msg: "Product created successfully",
