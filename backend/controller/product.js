@@ -38,10 +38,9 @@ class ProductsController {
   async getProductsByCategory(req, res) {
     try {
       const { limit = 10, skip = 0 } = req.query;
-      const { category } = req.params;
-      
+      const { categoryId } = req.params;
 
-      const categoryData = await Category.findOne({ title: category });
+      const categoryData = await Category.findById(categoryId);
       if (!categoryData) {
         return res.status(404).json({
           variant: "error",
@@ -50,16 +49,17 @@ class ProductsController {
         });
       }
 
-      const products = await Product.find({ categoryId: categoryData._id })
+      const products = await Product.find({ categoryId })
+        .populate([{ path: "categoryId", select: "title" }])
         .limit(parseInt(limit))
         .skip(parseInt(skip));
       const totalCount = await Product.countDocuments({
-        categoryId: categoryData._id,
+        categoryId,
       });
 
       res.status(200).json({
         variant: "success",
-        msg: `All products for category ${category}`,
+        msg: `All products for category ${categoryData?.title}`,
         payload: products,
         totalCount,
       });

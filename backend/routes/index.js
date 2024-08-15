@@ -34,10 +34,7 @@ router.get("/product/:id", ProductsController.getProduct);
 router.post("/product", [auth], ProductsController.createProduct);
 router.patch("/product/:id", [auth], ProductsController.updateProduct);
 router.delete("/product/:id", [auth], ProductsController.deleteProduct);
-router.get(
-  "/product/category/:category",
-  ProductsController.getProductsByCategory
-);
+router.get("/product/category/:categoryId",ProductsController.getProductsByCategory);
 
 //category
 router.get("/category", CategoriesController.getCategories);
