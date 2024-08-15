@@ -13,10 +13,13 @@ class ProductsController {
       const query = {};
 
       const products = await Product.find(query)
-        .populate([{ path: "categoryId", select: "title" }])
+        .populate([
+          { path: "categoryId", select: "title" },
+          { path: "adminId", select: ["fname",'username'] },
+        ])
         .limit(parseInt(limit))
         .skip(parseInt(skip - 1) * parseInt(limit))
-        .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 });
+        .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1, createdAt: -1 });
       const totalCount = await Product.countDocuments(query);
 
       res.status(200).json({
@@ -170,6 +173,15 @@ class ProductsController {
         return res.status(400).json({
           variant: "error",
           msg: error.details[0].message,
+          payload: null,
+        });
+      }
+
+      let existingTitle = await Product.findOne({ title: req.body.title });
+      if (existingTitle) {
+        return res.status(400).json({
+          variant: "error",
+          msg: "This title already exists",
           payload: null,
         });
       }
