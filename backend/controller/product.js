@@ -14,10 +14,9 @@ class ProductsController {
 
       const products = await Product.find(query)
         .populate([{ path: "categoryId", select: "title" }])
-        .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 })
         .limit(parseInt(limit))
-        .skip(parseInt(skip-1)*parseInt(limit));
-
+        .skip(parseInt(skip - 1) * parseInt(limit))
+        .sort({ [sortBy]: sortOrder === "asc" ? 1 : -1 });
       const totalCount = await Product.countDocuments(query);
 
       res.status(200).json({
