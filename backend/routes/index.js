@@ -2,6 +2,7 @@ import express from "express";
 import AdminsController from "../controller/admin.js";
 import ProductsController from "../controller/product.js";
 import CategoriesController from "../controller/category.js";
+import CommentsController from "../controller/comment.js";
 import { auth, ownerMiddleware } from "../middleware/auth.js";
 import { uploader } from "../middleware/uploader.js";
 
@@ -50,5 +51,11 @@ router.get("/category/:id", CategoriesController.getCategoryById);
 router.post("/category", [auth], CategoriesController.createCategory);
 router.patch("/category/:id", [auth], CategoriesController.updateCategory);
 router.delete("/category/:id", [auth], CategoriesController.deleteCategory);
+
+//comments
+router.get("/comment", [auth], CommentsController.getComments);
+router.delete("/comment/:id", [auth], CommentsController.deleteComment);
+router.post("/comment", [auth], CommentsController.createComment);
+router.patch("/comment/:id", [auth], CommentsController.updateComment);
 
 export default router;
