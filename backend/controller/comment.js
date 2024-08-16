@@ -54,6 +54,8 @@ class CommentsController {
         },
       });
     } catch (error) {
+      console.log(error);
+      
       res.status(500).json({
         variant: "error",
         msg: "Server error",
