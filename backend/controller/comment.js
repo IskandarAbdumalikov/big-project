@@ -60,19 +60,7 @@ class CommentsController {
       const { error } = validateComment(req.body);
       if (error) return res.status(400).json({ msg: error.details[0].message });
 
-      let existingComment = await Comment.findOne({ title: req.body.title });
-      console.log(existingComment);
-
-      if (
-        existingComment &&
-        existingComment._id.toString() !== req.params.id.toString()
-      ) {
-        return res.status(400).json({
-          msg: "This title already exists",
-          variant: "error",
-          payload: null,
-        });
-      }
+      
 
       const comment = await Comment.findByIdAndUpdate(req.params.id, req.body, {
         new: true,

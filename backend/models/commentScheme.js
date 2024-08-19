@@ -30,7 +30,7 @@ export const Comment = model("Comment", commentSchema);
 export const validateComment = (body) => {
   const schema = Joi.object({
     text: Joi.string().required(),
-    productId: Joi.string().length(24).required(),
+    productId: Joi.string(),
     rating: Joi.number().required(),
     adminId: Joi.string(),
   });
