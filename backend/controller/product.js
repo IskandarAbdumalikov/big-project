@@ -231,6 +231,32 @@ class ProductsController {
       });
     }
   }
+  async getProductsBySearch(req, res) {
+    try {
+      let {search} = req.query
+      const products = await Product.find({
+        title: { $regex: search, $options: "i" },
+      });
+      if (!products) {
+        return res.status(400).json({
+          variant: "error",
+          msg: "Products not found",
+          payload: null,
+        });
+      }
+      res.status(200).json({
+        variant: "success",
+        msg: "Products fetched successfully",
+        payload: products,
+      });
+    } catch (error) {
+      res.status(500).json({
+        variant: "error",
+        msg: "Server error",
+        payload: null,
+      });
+    }
+  }
 }
 
 export default new ProductsController();
