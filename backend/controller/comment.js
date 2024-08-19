@@ -29,15 +29,6 @@ class CommentsController {
       const { error } = validateComment(req.body);
       if (error) return res.status(400).json({ msg: error.details[0].message });
 
-      let existingTitle = await Comment.findOne({ title: req.body.title });
-      if (existingTitle) {
-        return res.status(400).json({
-          variant: "error",
-          msg: "This title already exists",
-          payload: null,
-        });
-      }
-
       const comment = await Comment.create({
         ...req.body,
         adminId: req.admin._id,
@@ -55,7 +46,7 @@ class CommentsController {
       });
     } catch (error) {
       console.log(error);
-      
+
       res.status(500).json({
         variant: "error",
         msg: "Server error",
@@ -83,11 +74,9 @@ class CommentsController {
         });
       }
 
-      const comment = await Comment.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
+      const comment = await Comment.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+      });
 
       if (!comment) {
         return res.status(404).json({
@@ -97,9 +86,7 @@ class CommentsController {
         });
       }
 
-      const admin = await Admins.findById(comment.adminId).select(
-        "name email"
-      );
+      const admin = await Admins.findById(comment.adminId).select("name email");
 
       res.status(200).json({
         variant: "success",
@@ -130,9 +117,7 @@ class CommentsController {
         });
       }
 
-      const admin = await Admins.findById(comment.adminId).select(
-        "name email"
-      );
+      const admin = await Admins.findById(comment.adminId).select("name email");
 
       res.status(200).json({
         variant: "success",
