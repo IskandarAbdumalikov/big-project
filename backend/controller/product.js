@@ -233,28 +233,34 @@ class ProductsController {
   }
   async getProductsBySearch(req, res) {
     try {
-      let {search} = req.query
-      const products = await Product.find({
-        title: { $regex: search, $options: "i" },
-      });
-      if (!products) {
-        return res.status(400).json({
-          variant: "error",
-          msg: "Products not found",
-          payload: null,
-        });
-      }
-      res.status(200).json({
-        variant: "success",
-        msg: "Products fetched successfully",
-        payload: products,
-      });
-    } catch (error) {
-      res.status(500).json({
-        variant: "error",
-        msg: "Server error",
-        payload: null,
-      });
+      const { value = "", limit = 3 } = req.query;
+      const text = value.trim();
+
+      if (!text)
+        return res
+          .status(400)
+          .json({ msg: "Please provide a search term", status: "error" });
+
+      const products = await Products.find({
+        $or: [
+          { title: { $regex: text, $options: "i" } },
+          { desc: { $regex: text, $options: "i" } },
+        ],
+      }).limit(parseInt(limit, 10));
+
+      if (products.length === 0)
+        return res
+          .status(404)
+          .json({ msg: "No products found", status: "error" });
+
+      res
+        .status(200)
+        .json({ msg: "Products found", status: "success", payload: products });
+    } catch (err) {
+      console.log(err);
+      res
+        .status(500)
+        .json({ msg: "Server error", status: "error", error: err.message });
     }
   }
 }
