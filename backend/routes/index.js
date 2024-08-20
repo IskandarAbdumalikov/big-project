@@ -54,7 +54,7 @@ router.patch("/category/:id", [auth], CategoriesController.updateCategory);
 router.delete("/category/:id", [auth], CategoriesController.deleteCategory);
 
 //comments
-router.get("/comment", [auth], CommentsController.getComments);
+router.get("/comment", CommentsController.getComments);
 router.delete("/comment/:id", [auth], CommentsController.deleteComment);
 router.post("/comment", [auth], CommentsController.createComment);
 router.patch("/comment/:id", [auth], CommentsController.updateComment);
