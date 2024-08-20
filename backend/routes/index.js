@@ -44,7 +44,7 @@ router.post(
   [auth, uploader.array("photos")],
   ProductsController.createProduct
 );
-router.get("/product/search", ProductsController.getProductsBySearch);
+router.get("/product/search", ProductsController.getProductBySearch);
 
 //category
 router.get("/category", CategoriesController.getCategories);

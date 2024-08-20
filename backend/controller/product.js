@@ -231,36 +231,42 @@ class ProductsController {
       });
     }
   }
-  async getProductsBySearch(req, res) {
+
+  async getProductBySearch(req, res) {
     try {
-      const { value = "", limit = 3 } = req.query;
-      const text = value.trim();
+      const { query } = req.query; 
+      if (!query) {
+        return res.status(400).json({
+          variant: "error",
+          msg: "Please provide a search query",
+          payload: null,
+        });
+      }
 
-      if (!text)
-        return res
-          .status(400)
-          .json({ msg: "Please provide a search term", status: "error" });
+      const products = await Product.find({
+        title: { $regex: query, $options: "i" },
+      });
 
-      const products = await Products.find({
-        $or: [
-          { title: { $regex: text, $options: "i" } },
-          { desc: { $regex: text, $options: "i" } },
-        ],
-      }).limit(parseInt(limit, 10));
+      if (products.length === 0) {
+        return res.status(404).json({
+          variant: "error",
+          msg: "No products found",
+          payload: null,
+        });
+      }
 
-      if (products.length === 0)
-        return res
-          .status(404)
-          .json({ msg: "No products found", status: "error" });
-
-      res
-        .status(200)
-        .json({ msg: "Products found", status: "success", payload: products });
-    } catch (err) {
-      console.log(err);
-      res
-        .status(500)
-        .json({ msg: "Server error", status: "error", error: err.message });
+      res.status(200).json({
+        variant: "success",
+        msg: "Products fetched successfully",
+        payload: products,
+      });
+    } catch (error) {
+      console.error("Error fetching products:", error.message); // Errorni log qilish
+      res.status(500).json({
+        variant: "error",
+        msg: "Server error",
+        payload: null,
+      });
     }
   }
 }
